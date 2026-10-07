@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="PULSAR-Net: Neural Reconstruction of LiDAR Point Clouds under Jamming Attacks via Full-Waveform Representation and Simultaneous Laser Sensing">
+  <meta name="description" content="PULSAR-Net is the first defense that reconstructs authentic LiDAR point clouds under jamming attacks, using full-waveform data and simultaneous laser sensing. Trained only on synthetic data, it reconstructs 92% (static) and 73% (driving) of vehicles erased by real-world jamming.">
+  <meta name="keywords" content="LiDAR, jamming attack, spoofing, full-waveform LiDAR, simultaneous laser sensing, point cloud reconstruction, autonomous driving security, NeurIPS 2026">
+  <meta name="author" content="Ryo Yoshida, Takami Sato, Wenlun Zhang, Yuki Hayakawa, Shota Nagai, Yunshan Zhong, Kentaro Yoshioka">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Keio CSG (Keio Computer Science Group) - Keio University">
+  <meta property="og:title" content="PULSAR-Net: Neural Reconstruction of LiDAR Point Clouds under Jamming Attacks">
+  <meta property="og:description" content="The first defense that reconstructs LiDAR point clouds under jamming attacks. Trained only on synthetic data, PULSAR-Net reconstructs 92% / 73% of vehicles erased by real-world jamming in static / driving scenarios.">
+  <meta property="og:url" content="https://keio-csg.github.io/PULSAR_Net_project_page/">
+  <meta property="og:image" content="https://keio-csg.github.io/PULSAR_Net_project_page/static/images/fig1_teaser.png">
+  <meta property="og:image:alt" content="PULSAR-Net reconstructs a point cloud erased by a LiDAR jamming attack">
+  <meta property="article:author" content="Ryo Yoshida">
+  <meta property="article:section" content="Research">
+  <meta property="article:tag" content="LiDAR Security">
+  <meta property="article:tag" content="Full-Waveform LiDAR">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PULSAR-Net: Neural Reconstruction of LiDAR Point Clouds under Jamming Attacks">
+  <meta name="twitter:description" content="The first defense against LiDAR jamming: full-waveform + simultaneous laser sensing. 92% / 73% vehicle reconstruction in real-world static / driving attacks.">
+  <meta name="twitter:image" content="https://keio-csg.github.io/PULSAR_Net_project_page/static/images/fig1_teaser.png">
+  <meta name="twitter:image:alt" content="PULSAR-Net reconstructs a point cloud erased by a LiDAR jamming attack">
+
+  <!-- Academic/Research Specific -->
+  <meta name="citation_title" content="Neural Reconstruction of LiDAR Point Clouds under Jamming Attacks via Full-Waveform Representation and Simultaneous Laser Sensing">
+  <meta name="citation_author" content="Yoshida, Ryo">
+  <meta name="citation_author" content="Sato, Takami">
+  <meta name="citation_author" content="Zhang, Wenlun">
+  <meta name="citation_author" content="Hayakawa, Yuki">
+  <meta name="citation_author" content="Nagai, Shota">
+  <meta name="citation_author" content="Zhong, Yunshan">
+  <meta name="citation_author" content="Yoshioka, Kentaro">
+  <meta name="citation_publication_date" content="2026">
+  <meta name="citation_conference_title" content="Advances in Neural Information Processing Systems (NeurIPS 2026)">
+
+  <!-- Additional SEO -->
+  <meta name="theme-color" content="#2563eb">
+  <meta name="msapplication-TileColor" content="#2563eb">
+
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://ajax.googleapis.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+  <title>PULSAR-Net: Neural Reconstruction of LiDAR Point Clouds under Jamming Attacks | NeurIPS 2026</title>
+
+  <!-- Favicon and App Icons -->
+  <link rel="icon" type="image/x-icon" href="static/favicon/csg-favicon.ico">
+  <link rel="apple-touch-icon" href="static/favicon/csg-favicon.ico">
+
+  <!-- Critical CSS - Load synchronously -->
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+  <link rel="stylesheet" href="static/css/custom.css">
+
+  <!-- Non-critical CSS - Load asynchronously -->
+  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+
+  <!-- Fallback for browsers that don't support preload -->
+  <noscript>
+    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  </noscript>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Defer non-critical JavaScript -->
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/bulma-carousel.min.js"></script>
+  <script defer src="static/js/bulma-slider.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+  <script defer src="static/js/comparison-viewer.js"></script>
+
+  <!-- Structured Data for Academic Papers -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "Neural Reconstruction of LiDAR Point Clouds under Jamming Attacks via Full-Waveform Representation and Simultaneous Laser Sensing",
+    "description": "PULSAR-Net reconstructs authentic LiDAR point clouds under jamming attacks by leveraging full-waveform representations and simultaneous laser sensing.",
+    "author": [
+      { "@type": "Person", "name": "Ryo Yoshida", "affiliation": { "@type": "Organization", "name": "Keio University" } },
+      { "@type": "Person", "name": "Takami Sato", "affiliation": { "@type": "Organization", "name": "Keio University" } },
+      { "@type": "Person", "name": "Wenlun Zhang", "affiliation": { "@type": "Organization", "name": "Keio University" } },
+      { "@type": "Person", "name": "Yuki Hayakawa", "affiliation": { "@type": "Organization", "name": "Keio University" } },
+      { "@type": "Person", "name": "Shota Nagai", "affiliation": { "@type": "Organization", "name": "Keio University" } },
+      { "@type": "Person", "name": "Yunshan Zhong", "affiliation": { "@type": "Organization", "name": "Keio University" } },
+      { "@type": "Person", "name": "Kentaro Yoshioka", "affiliation": { "@type": "Organization", "name": "Keio University" } }
+    ],
+    "datePublished": "2026",
+    "publisher": { "@type": "Organization", "name": "NeurIPS 2026" },
+    "url": "https://keio-csg.github.io/PULSAR_Net_project_page/",
+    "image": "https://keio-csg.github.io/PULSAR_Net_project_page/static/images/fig1_teaser.png",
+    "keywords": ["LiDAR", "jamming attack", "full-waveform LiDAR", "simultaneous laser sensing", "point cloud reconstruction", "autonomous driving security"],
+    "isAccessibleForFree": true
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Scroll to Top Button -->
+  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <!-- More Works Dropdown -->
+  <div class="more-works-container">
+    <button class="more-works-btn" onclick="toggleMoreWorks()" title="View More Works from Our Lab">
+      <i class="fas fa-flask"></i>
+      More Works
+      <i class="fas fa-chevron-down dropdown-arrow"></i>
+    </button>
+    <div class="more-works-dropdown" id="moreWorksDropdown">
+      <div class="dropdown-header">
+        <h4>More Works from Our Lab</h4>
+        <button class="close-btn" onclick="toggleMoreWorks()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="works-list">
+        <a href="https://keio-csg.github.io/FWL-ToPM/" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>Towards Real-Time Full-Waveform LiDAR Transformers via Intensity-Guided Token Reduction and Physics-Aware Augmentation</h5>
+            <p>Intensity-guided token pruning and merging for full-waveform LiDAR, reaching 53.2 FPS with a 9-point F1 gain on Ghost-FWL.</p>
+            <span class="work-venue">NeurIPS 2026</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+        <a href="https://keio-csg.github.io/Ghost-FWL/" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>Ghost-FWL: A Large-Scale Full-Waveform LiDAR Dataset for Ghost Detection and Removal</h5>
+            <p>The first and largest annotated mobile full-waveform LiDAR dataset for ghost detection and removal, with 24K frames across 10 scenes and 7.5 billion peak-level annotations.</p>
+            <span class="work-venue">CVPR 2026</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+        <a href="https://sites.google.com/keio.jp/keio-csg/projects/AttackonDrivingVehicle?authuser=0" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>On the Realism of LiDAR Spoofing Attacks against Autonomous Driving Vehicle at High Speed and Long Distance</h5>
+            <p>Demonstrates LiDAR spoofing attacks against a vehicle driving at 60 km/h from 110 meters away, against a vehicle operated by a popular AD stack.</p>
+            <span class="work-venue">NDSS 2025</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+        <a href="https://sites.google.com/keio.jp/keio-csg/projects/new-gen-lidar-sec?authuser=0" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>LiDAR Spoofing Meets the New-Gen: Capability Improvements, Broken Assumptions, and New Attack Strategies</h5>
+            <p>The first large-scale measurement study of LiDAR spoofing capabilities across 9 popular LiDARs and 3 major types of object detectors.</p>
+            <span class="work-venue">NDSS 2024</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <main id="main-content">
+  <section class="hero top-hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">PULSAR-Net: Neural Reconstruction of LiDAR Point Clouds under Jamming Attacks via Full-Waveform Representation and Simultaneous Laser Sensing</h1>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">Ryo Yoshida,</span>
+              <span class="author-block">Takami Sato,</span>
+              <span class="author-block">Wenlun Zhang,</span>
+              <span class="author-block">Yuki Hayakawa,</span>
+              <span class="author-block">Shota Nagai,</span>
+              <span class="author-block">Yunshan Zhong,</span>
+              <span class="author-block"><a href="https://sites.google.com/keio.jp/keio-csg/home" target="_blank">Kentaro Yoshioka</a></span>
+            </div>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">Keio University</span>
+            </div>
+            <span class="publication-venue">NeurIPS 2026</span>
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <!-- TODO: Replace href and remove the pending classes once the paper is available -->
+                <span class="link-block link-block-pending">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark is-link-pending" aria-disabled="true">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                    <span>Paper (Coming Soon)</span>
+                  </a>
+                </span>
+
+                <!-- TODO: Replace href and remove the pending classes once the arXiv version is available -->
+                <span class="link-block link-block-pending">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark is-link-pending" aria-disabled="true">
+                    <span class="icon"><i class="ai ai-arxiv"></i></span>
+                    <span>arXiv (Coming Soon)</span>
+                  </a>
+                </span>
+
+                <!-- TODO: Replace href and remove the pending classes once the code is released -->
+                <span class="link-block link-block-pending">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark is-link-pending" aria-disabled="true">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>Code (Coming Soon)</span>
+                  </a>
+                </span>
+
+                <span class="link-block">
+                  <a href="https://www.youtube.com/watch?v=NEBLLA7JcmY" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-youtube"></i></span>
+                    <span>Video</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Teaser -->
+  <section class="hero teaser">
+    <div class="container is-max-desktop">
+      <div class="hero-body">
+        <div class="image is-fullwidth">
+          <img src="static/images/fig1_teaser.png" alt="LiDAR jamming threat model and point cloud reconstruction by PULSAR-Net" class="paper-figure">
+        </div>
+        <p class="figure-caption">
+          <strong>Real-world reconstruction under a jamming attack.</strong>
+          (i) An attacker injects high-frequency lasers into the victim's LiDAR, and the vehicle ahead disappears from the point cloud.
+          (ii) Without defense, the jammed point cloud (c) contains no vehicles. <strong>PULSAR-Net</strong> recovers a point cloud (d) that is faithful to the clean one (b),
+          using the intermediate full-waveform representation and the simultaneous sensing feature available in modern LiDARs.
+        </p>
+
+        <div class="highlight-stats">
+          <div class="highlight-stat">
+            <span class="stat-value">92% / 73%</span>
+            <span class="stat-label">Vehicles reconstructed in real-world static / driving attacks</span>
+          </div>
+          <div class="highlight-stat">
+            <span class="stat-value">&ge;82%</span>
+            <span class="stat-label">Point-level recovery on synthetic benchmarks (&ge;2&times; the baseline)</span>
+          </div>
+          <div class="highlight-stat">
+            <span class="stat-value">31.7 FPS</span>
+            <span class="stat-label">Inference on an RTX 5090, above the 10&ndash;20 FPS perception rate</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End teaser -->
+
+
+  <!-- Paper abstract -->
+  <section class="hero is-small is-light">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Abstract</h2>
+            <div class="content has-text-justified">
+              <p>
+                LiDAR sensors are critical for autonomous driving perception, yet remain vulnerable to spoofing attacks.
+                Jamming attacks inject high-frequency laser pulses that completely blind LiDAR sensors by overwhelming authentic returns with malicious signals.
+                We discover that while point clouds become randomized, the underlying full-waveform data retains distinguishable signatures between attack and legitimate signals.
+              </p>
+              <p>
+                In this work, we propose <strong>PULSAR-Net</strong>, capable of reconstructing authentic point clouds under jamming attacks by leveraging previously underutilized intermediate full-waveform representations and simultaneous laser sensing in modern LiDAR systems.
+                PULSAR-Net adopts a novel U-Net architecture with axial spatial attention mechanisms specifically designed to identify attack-induced signals from authentic object returns in the full-waveform representation.
+                To address the lack of full-waveform representations in existing LiDAR datasets under jamming attacks, we introduce a physics-aware dataset generation pipeline that synthesizes realistic full-waveform representations under jamming attacks.
+                Despite being trained exclusively on synthetic data, PULSAR-Net achieves <strong>reconstruction rates of 92% and 73%</strong> for vehicles obscured by jamming attacks in real-world static and driving scenarios, respectively.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End paper abstract -->
+
+
+  <!-- Contributions -->
+  <section class="hero is-small is-light section-white">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Contributions</h2>
+            <div class="content">
+              <ul class="contribution-list">
+                <li><strong>PULSAR-Net</strong> (<strong>P</strong>oint cloud <strong>U</strong>n-jamming via <strong>L</strong>iDAR <strong>S</strong>ignal <strong>A</strong>daptive <strong>R</strong>econstruction), the first successful defense against jamming attacks on LiDAR systems: a U-Net-based architecture with axial spatial attention designed for attack-signal segmentation in the full-waveform representation.</li>
+                <li>A <strong>physics-based synthesis pipeline</strong> that generates realistic full-waveform data under jamming attacks from existing point cloud datasets (KITTI-J and nuScenes-J).</li>
+                <li>A recovery rate of <strong>&ge;82%</strong> of points obscured by jamming on our synthetic benchmarks, an <strong>&ge;2-fold</strong> improvement over a naive baseline.</li>
+                <li>Integration into a <strong>production-ready LiDAR</strong> with full-waveform access, developed with a major supplier. Trained solely on simulated data, PULSAR-Net reconstructs <strong>92%</strong> and <strong>73%</strong> of erased vehicles in real-world static and driving scenarios.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End contributions -->
+
+
+  <!-- Key insight -->
+  <section class="hero is-small is-light">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Key Insight: The Legitimate Echo Is Still There</h2>
+            <div class="content has-text-justified">
+              <p>
+                A jamming attack such as the HFR attack floods the LiDAR with rapid laser pulses.
+                The DSP pipeline picks the strongest peak in each waveform, which is usually an attack pulse, so the point lands at the wrong time of flight and the point cloud becomes random.
+                Yet the <strong>legitimate reflection still reaches the sensor</strong>, only masked by stronger attack pulses.
+                Because the corruption happens before the point cloud is formed, point-cloud-level defenses (e.g. radius or statistical outlier removal) cannot recover it.
+                The information that can is normally discarded after peak detection.
+              </p>
+            </div>
+
+            <div class="figure-block">
+              <img src="static/images/fig2_concept.png" alt="LiDAR jamming attack and simultaneous laser sensing" class="paper-figure" loading="lazy">
+              <p class="figure-caption">
+                <strong>(i)</strong> Under a jamming attack, attack pulses dominate the waveform and the detected peak gives a wrong ToF.
+                <strong>(ii)</strong> Modern LiDARs measure multiple points simultaneously. The attack pulses appear synchronized across all receivers, while legitimate pulses differ per receiver depending on the object they hit.
+              </p>
+            </div>
+
+            <div class="insight-grid">
+              <div class="insight-card">
+                <h4>Full-waveform representation</h4>
+                The time-resolved intensity trace recorded before peak detection. It still contains the weaker legitimate return buried among the attack pulses.
+              </div>
+              <div class="insight-card">
+                <h4>Simultaneous laser sensing</h4>
+                The attacker's beam diffuses wider than the LiDAR aperture, so it cannot target one receiver. Attack pulses look <em>identical</em> across simultaneously sensed receivers; legitimate returns do not.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End key insight -->
+
+
+  <!-- Method -->
+  <section class="hero is-small is-light section-white">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">PULSAR-Net</h2>
+
+            <div class="figure-block">
+              <img src="static/images/fig3_pipeline.png" alt="PULSAR-Net architecture" class="paper-figure" loading="lazy">
+              <p class="figure-caption">
+                <strong>Overview of PULSAR-Net.</strong>
+                A U-Net-inspired architecture built from depthwise-separable 3D convolutions for efficient feature extraction, with axial attention at the bottleneck to model spatial and temporal dependencies in the full waveform.
+                It outputs a 3-class mask (jamming pulse / true pulse / others) for each waveform.
+              </p>
+            </div>
+
+            <div class="content has-text-justified">
+              <h3 class="title is-5">Segmentation-Based Full-Waveform Denoising</h3>
+              <p>
+                We formulate reconstruction as segmentation rather than regression.
+                For each waveform bin, PULSAR-Net predicts one of three classes: background, legitimate reflection, or attack pulse.
+                The predicted attack mask suppresses the malicious pulses, A&#x0302; = &#x01CD; &odot; (1 &minus; M<sub>attack</sub>), and the point cloud is recovered by peak detection on each denoised waveform.
+                Masking in the original high-resolution space keeps the fine waveform detail that a regression model loses when resizing its input, and it is cheaper.
+              </p>
+
+              <h3 class="title is-5">Depthwise-Separable 3D Convolution</h3>
+              <p>
+                Full-waveform tensors (e.g. 32 &times; 1800 &times; 800) are too large for standard 3D convolutions.
+                Decoupling spatial and channel-wise operations cuts parameters and computation by <strong>over 97%</strong> while keeping representational capacity, which makes real-time deployment possible.
+              </p>
+
+              <h3 class="title is-5">Axial Spatial-Temporal Attention</h3>
+              <p>
+                Self-attention is applied sequentially along the azimuth (W), elevation (H), and temporal (D) axes.
+                This captures long-range dependencies at a fraction of the cost of full 3D attention, and lets the network compare simultaneously sensed channels directly: identical waveforms across channels signal an attack, while legitimate returns naturally differ.
+              </p>
+
+              <h3 class="title is-5">Physics-Aware Jamming Simulation</h3>
+              <p>
+                Collecting full-waveform data under real jamming at scale is impractical, and existing datasets store only final point clouds.
+                We therefore synthesize training data from KITTI and nuScenes:
+              </p>
+              <ul>
+                <li><strong>Waveform modeling.</strong> Each point becomes a Gaussian pulse at its time of flight, scaled by its intensity, giving the benign waveform tensor <em>L</em>.</li>
+                <li><strong>Simultaneous sensing.</strong> A scan-timing matrix <em>T</em> marks which measurements are fired at the same time.</li>
+                <li><strong>Jamming attack.</strong> The attacked waveform is &#x01CD; = <em>L</em> + <em>F</em>(<em>T</em>) + <em>N</em>, where <em>F</em> injects a periodic train of Gaussian attack pulses shared by all simultaneously sensed measurements, with &plusmn;20 ns timing jitter. This covers more general jamming than periodic HFR / A-HFR attacks.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End method -->
+
+
+  <!-- Results on synthetic benchmarks -->
+  <section class="hero is-small is-light">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Results on KITTI-J and nuScenes-J</h2>
+
+            <div class="content has-text-justified">
+              <p>
+                We inject jamming into &plusmn;45&deg; in front of the victim on 1,100 scenes from each dataset (1,000 train / 100 test), with &phi; simultaneous sensing lasers.
+                We compare against <em>Naive Average Subtraction</em>, which subtracts the mean of simultaneously sensed waveforms, and <em>Neural DSP</em> (Scheuble et al., ICCV 2025), a Transformer that processes full waveforms.
+                Point-level recovery accuracy counts a reconstructed point as correct if it is within 0.5 m of the benign point along the laser direction.
+              </p>
+            </div>
+
+            <div class="fwltable-card">
+              <div class="table-container">
+                <table class="table is-bordered is-striped is-hoverable is-fullwidth fwltable__table">
+                  <caption class="fwltable__caption">
+                    <strong>Point-level recovery accuracy (%)</strong> on nuScenes-J and KITTI-J. &phi; is the number of simultaneous sensing lasers.
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th rowspan="2">&phi;</th>
+                      <th colspan="2">Ours</th><th colspan="2">Naive Avg. Sub.</th><th colspan="2">Neural DSP</th><th colspan="2">No Defense</th>
+                    </tr>
+                    <tr>
+                      <th>nuScenes-J</th><th>KITTI-J</th><th>nuScenes-J</th><th>KITTI-J</th><th>nuScenes-J</th><th>KITTI-J</th><th>nuScenes-J</th><th>KITTI-J</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>1</td><td>67.95</td><td>73.21</td><td>&ndash;</td><td>&ndash;</td><td>4.57</td><td>3.92</td><td>3.37</td><td>2.92</td></tr>
+                    <tr><td>4</td><td><strong>82.66</strong></td><td><strong>89.63</strong></td><td>38.22</td><td>28.60</td><td>6.21</td><td>21.40</td><td>3.36</td><td>2.87</td></tr>
+                    <tr><td>5</td><td><strong>86.13</strong></td><td><strong>89.90</strong></td><td>38.26</td><td>30.33</td><td>9.56</td><td>26.39</td><td>3.39</td><td>2.92</td></tr>
+                    <tr><td>10</td><td><strong>85.95</strong></td><td><strong>89.86</strong></td><td>37.77</td><td>35.93</td><td>36.67</td><td>29.47</td><td>3.39</td><td>2.93</td></tr>
+                    <tr><td>25</td><td><strong>86.35</strong></td><td><strong>89.62</strong></td><td>36.91</td><td>42.28</td><td>46.35</td><td>21.03</td><td>3.42</td><td>2.90</td></tr>
+                    <tr><td>55</td><td><strong>86.47</strong></td><td><strong>89.85</strong></td><td>35.50</td><td>45.44</td><td>48.87</td><td>13.76</td><td>3.41</td><td>2.92</td></tr>
+                    <tr><td>110</td><td><strong>86.32</strong></td><td><strong>89.44</strong></td><td>32.60</td><td>35.21</td><td>47.84</td><td>13.44</td><td>3.39</td><td>2.82</td></tr>
+                    <tr><td>225</td><td><strong>86.75</strong></td><td><strong>89.56</strong></td><td>34.89</td><td>16.36</td><td>38.93</td><td>13.30</td><td>3.35</td><td>2.85</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="content has-text-justified">
+              <p>
+                Downstream, PULSAR-Net brings detector mAP from 0 back to near the no-attack level (e.g. 65.52 vs. 69.87 with PointPillars on nuScenes-J), while all baselines collapse under heavy jamming.
+                Naive subtraction leaves residual attack pulses that become false positives, and Neural DSP's coarse tokenization cannot resolve the many peaks in a jammed waveform.
+              </p>
+            </div>
+
+            <div class="fwltable-card">
+              <div class="table-container">
+                <table class="table is-bordered is-striped is-hoverable is-fullwidth fwltable__table">
+                  <caption class="fwltable__caption">
+                    <strong>Object detector-level mAP</strong> on nuScenes-J and KITTI-J for three levels of simultaneous sensing &phi;.
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th rowspan="2">&phi;</th><th rowspan="2">Method</th>
+                      <th colspan="2">nuScenes-J</th><th colspan="2">KITTI-J</th>
+                    </tr>
+                    <tr>
+                      <th>PointPillars</th><th>CenterPoint</th><th>PointPillars</th><th>PV-RCNN</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td rowspan="4">25</td><td class="is-method">No Defense</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
+                    <tr><td class="is-method">Naive Avg. Sub.</td><td>1.94</td><td>0.00</td><td>21.81</td><td>41.06</td></tr>
+                    <tr><td class="is-method">Neural DSP</td><td>20.09</td><td>4.07</td><td>4.32</td><td>6.25</td></tr>
+                    <tr class="is-ours"><td class="is-method"><strong>Ours</strong></td><td><strong>64.03</strong></td><td><strong>59.08</strong></td><td><strong>48.33</strong></td><td><strong>56.06</strong></td></tr>
+                    <tr class="fwltable__divider"><td colspan="6"></td></tr>
+                    <tr><td rowspan="4">110</td><td class="is-method">No Defense</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
+                    <tr><td class="is-method">Naive Avg. Sub.</td><td>2.56</td><td>4.04</td><td>16.36</td><td>32.94</td></tr>
+                    <tr><td class="is-method">Neural DSP</td><td>37.70</td><td>26.51</td><td>0.57</td><td>1.43</td></tr>
+                    <tr class="is-ours"><td class="is-method"><strong>Ours</strong></td><td><strong>65.52</strong></td><td><strong>59.00</strong></td><td><strong>48.10</strong></td><td><strong>55.74</strong></td></tr>
+                    <tr class="fwltable__divider"><td colspan="6"></td></tr>
+                    <tr><td rowspan="4">225</td><td class="is-method">No Defense</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
+                    <tr><td class="is-method">Naive Avg. Sub.</td><td>4.09</td><td>9.11</td><td>0.14</td><td>2.34</td></tr>
+                    <tr><td class="is-method">Neural DSP</td><td>31.05</td><td>22.49</td><td>0.34</td><td>0.63</td></tr>
+                    <tr class="is-ours"><td class="is-method"><strong>Ours</strong></td><td><strong>64.15</strong></td><td><strong>59.25</strong></td><td><strong>48.95</strong></td><td><strong>56.67</strong></td></tr>
+                    <tr class="fwltable__divider"><td colspan="6"></td></tr>
+                    <tr><td>&ndash;</td><td class="is-method">No Attack</td><td>69.87</td><td>72.72</td><td>57.51</td><td>62.75</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="content has-text-justified">
+              <h3 class="title is-5">Transferability and Ablation</h3>
+              <p>
+                A model trained on nuScenes-J keeps 81.73% point-level accuracy on KITTI-J, suggesting that PULSAR-Net learns LiDAR-agnostic physical cues rather than dataset artifacts.
+                Attention along a single axis helps only marginally; attention on all three axes gives the best accuracy at a negligible speed cost.
+              </p>
+            </div>
+
+            <div class="columns">
+              <div class="column">
+                <div class="fwltable-card">
+                  <div class="table-container">
+                    <table class="table is-bordered is-striped is-hoverable is-fullwidth fwltable__table">
+                      <caption class="fwltable__caption">
+                        <strong>Transferability</strong> (point-level accuracy, &phi; = 5). Rows: source, columns: target.
+                      </caption>
+                      <thead>
+                        <tr><th>Train &rarr; Test</th><th>nuScenes-J</th><th>KITTI-J</th></tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>nuScenes-J</td><td><strong>86.13</strong></td><td>81.73</td></tr>
+                        <tr><td>KITTI-J</td><td>58.81</td><td><strong>89.90</strong></td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="column">
+                <div class="fwltable-card">
+                  <div class="table-container">
+                    <table class="table is-bordered is-striped is-hoverable is-fullwidth fwltable__table">
+                      <caption class="fwltable__caption">
+                        <strong>Axial attention ablation</strong> on nuScenes-J (&phi; = 5, RTX 5090).
+                      </caption>
+                      <thead>
+                        <tr><th>Attention</th><th>Point Acc.</th><th>mAP</th><th>FPS</th></tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>None</td><td>67.85</td><td>25.01</td><td>32.89</td></tr>
+                        <tr><td>W only</td><td>82.98</td><td>62.05</td><td>31.94</td></tr>
+                        <tr><td>H only</td><td>80.34</td><td>62.50</td><td>32.25</td></tr>
+                        <tr><td>D only</td><td>81.93</td><td>62.55</td><td>32.36</td></tr>
+                        <tr class="is-ours"><td><strong>W + H + D</strong></td><td><strong>86.13</strong></td><td><strong>63.26</strong></td><td>31.74</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End results on synthetic benchmarks -->
+
+
+  <!-- Real-world evaluation -->
+  <section class="hero is-small is-light section-white" id="real-world">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Real-World Evaluation</h2>
+
+            <div class="content has-text-justified">
+              <p>
+                We developed a production-ready LiDAR with a major LiDAR manufacturer that streams full-waveform data alongside its standard point cloud output
+                (90.24&deg; &times; 26.3&deg; FoV, 0.47&deg; angular resolution, &phi; = 96), and attacked it with the state-of-the-art HFR jamming attack.
+                The PULSAR-Net used here is trained <strong>only on synthetic nuScenes-J</strong>, with no LiDAR-specific fine-tuning.
+                We evaluate on 700 frames across static and driving scenarios, with 3,106 manually annotated vehicles at 3.4 m to 59 m.
+              </p>
+            </div>
+
+            <div class="figure-block figure-narrow" style="max-width: 560px;">
+              <img src="static/images/fig4_setup.png" alt="Experimental setup with the full-waveform LiDAR, target vehicle, and jamming device" class="paper-figure" loading="lazy">
+              <p class="figure-caption">
+                <strong>Experimental setup.</strong> Our production-ready full-waveform LiDAR, a target vehicle about 59 m away, and the jamming device.
+              </p>
+            </div>
+
+            <!-- Demo video -->
+            <div class="figure-block">
+              <div class="video-embed">
+                <iframe src="https://www.youtube-nocookie.com/embed/NEBLLA7JcmY" title="PULSAR-Net real-world jamming attack demo" loading="lazy"
+                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+              </div>
+              <p class="figure-caption">
+                <strong>Demo video.</strong> PULSAR-Net against a real LiDAR jamming attack in driving and static scenarios, with CenterPoint detections overlaid.
+                The target vehicle disappears from the jammed point cloud in every frame, and PULSAR-Net recovers it.
+              </p>
+            </div>
+
+            <!-- Interactive comparison viewer -->
+            <div class="figure-block">
+              <div class="comp-scenes" role="group" aria-label="Select scene">
+                <button class="scene-btn button is-small is-rounded is-info" data-scene="scene1">Scene 1</button>
+                <button class="scene-btn button is-small is-rounded" data-scene="scene2">Scene 2</button>
+                <button class="scene-btn button is-small is-rounded" data-scene="scene3">Scene 3</button>
+                <button class="scene-btn button is-small is-rounded" data-scene="scene4">Scene 4</button>
+              </div>
+              <div class="comp-viewer" id="compViewer">
+                <img src="static/images/realworld/scene1/denoised.jpg" class="comp-base" id="compBase" alt="Point cloud reconstructed by PULSAR-Net">
+                <img src="static/images/realworld/scene1/benign.jpg" class="comp-overlay" id="compOverlay" alt="Point cloud without attack or under attack">
+                <div class="comp-divider" id="compDivider" style="left:50%;"></div>
+                <span class="comp-label comp-label-left benign" id="compLabelLeft">No Attack</span>
+                <span class="comp-label comp-label-right denoised">PULSAR-Net</span>
+              </div>
+              <p class="figure-caption comp-legend">
+                <strong>Left:</strong> <span class="is-benign">No Attack</span> / <span class="is-attacked">Under Attack</span> (alternating)
+                &nbsp;|&nbsp; <strong>Right:</strong> <span class="is-denoised">PULSAR-Net Reconstruction</span>
+              </p>
+              <p class="comp-hint"><i class="fas fa-hand-pointer"></i> Hover or drag to move the slider yourself.</p>
+            </div>
+
+            <div class="fwltable-card">
+              <div class="table-container">
+                <table class="table is-bordered is-striped is-hoverable is-fullwidth fwltable__table">
+                  <caption class="fwltable__caption">
+                    <strong>Real-world mAP</strong> across four static and three driving scenarios. Benign data is not available for driving scenarios.
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th rowspan="2">Detector</th>
+                      <th colspan="3">Static (4 scenarios)</th><th colspan="2">Driving (3 scenarios)</th>
+                    </tr>
+                    <tr>
+                      <th>No Attack</th><th>No Defense</th><th>Ours</th><th>No Defense</th><th>Ours</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>PointPillars</td><td>49.7</td><td>0.10</td><td><strong>49.8</strong></td><td>0.70</td><td><strong>50.7</strong></td></tr>
+                    <tr><td>CenterPoint</td><td>67.1</td><td>0.00</td><td><strong>69.4</strong></td><td>0.20</td><td><strong>63.1</strong></td></tr>
+                    <tr><td>PV-RCNN</td><td>44.0</td><td>0.00</td><td><strong>49.8</strong></td><td>0.00</td><td><strong>53.8</strong></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="content has-text-justified">
+              <ul>
+                <li><strong>Static scenarios.</strong> Jamming collapses detection to mAP &asymp; 0. PULSAR-Net restores it to the no-attack level or slightly above, and reconstructs <strong>91.7%</strong> of the vehicles erased by the attack (CenterPoint, IoU 0.4).</li>
+                <li><strong>Driving scenarios</strong> (up to 30.5 km/h). PULSAR-Net recovers 50.7 / 63.1 / 53.8 mAP from near zero and reconstructs <strong>73.2%</strong> of erased vehicles, showing that the reconstruction keeps enough geometric cues even under motion.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End real-world evaluation -->
+
+
+  <!-- Acknowledgements -->
+  <section class="hero is-small is-light">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Acknowledgements</h2>
+            <div class="content has-text-justified">
+              <p>
+                We gratefully acknowledge Takahiro Kado, Ibuki Fujioka, and Taro Beppu at Sony Semiconductor Solutions for their generous support and for providing the Sony LiDAR sensor used in this work.
+                The Sony LiDAR system played an essential role in enabling this research.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End acknowledgements -->
+
+
+  <!--BibTex citation -->
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <div class="bibtex-header">
+        <h2 class="title">BibTeX</h2>
+        <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+          <i class="fas fa-copy"></i>
+          <span class="copy-text">Copy</span>
+        </button>
+      </div>
+<pre id="bibtex-code"><code>@inproceedings{yoshida2026pulsarnet,
+    author    = {Yoshida, Ryo and Sato, Takami and Zhang, Wenlun and Hayakawa, Yuki and Nagai, Shota and Zhong, Yunshan and Yoshioka, Kentaro},
+    title     = {Neural Reconstruction of {LiDAR} Point Clouds under Jamming Attacks via Full-Waveform Representation and Simultaneous Laser Sensing},
+    booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+    year      = {2026}
+}</code></pre>
+    </div>
+  </section>
+  <!--End BibTex citation -->
+  </main>
+
+
+  <footer class="footer is-light">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a> which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+              You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br> This website is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
+              Commons Attribution-ShareAlike 4.0 International License</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
