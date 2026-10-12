@@ -296,296 +296,18 @@
   <!-- End paper abstract -->
 
 
-  <!-- Contributions -->
-  <section class="hero is-small is-light section-white">
-    <div class="hero-body">
-      <div class="container">
-        <div class="columns is-centered">
-          <div class="column is-four-fifths">
-            <h2 class="title is-3">Contributions</h2>
-            <div class="content">
-              <ul class="contribution-list">
-                <li><strong>PULSAR-Net</strong> (<strong>P</strong>oint cloud <strong>U</strong>n-jamming via <strong>L</strong>iDAR <strong>S</strong>ignal <strong>A</strong>daptive <strong>R</strong>econstruction), the first successful defense against jamming attacks on LiDAR systems: a U-Net-based architecture with axial spatial attention designed for attack-signal segmentation in the full-waveform representation.</li>
-                <li>A <strong>physics-based synthesis pipeline</strong> that generates realistic full-waveform data under jamming attacks from existing point cloud datasets (KITTI-J and nuScenes-J).</li>
-                <li>A recovery rate of <strong>&ge;82%</strong> of points obscured by jamming on our synthetic benchmarks, an <strong>&ge;2-fold</strong> improvement over a naive baseline.</li>
-                <li>Integration into a <strong>production-ready LiDAR</strong> with full-waveform access, developed with a major supplier. Trained solely on simulated data, PULSAR-Net reconstructs <strong>92%</strong> and <strong>73%</strong> of erased vehicles in real-world static and driving scenarios.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- End contributions -->
-
-
-  <!-- Key insight -->
-  <section class="hero is-small is-light">
-    <div class="hero-body">
-      <div class="container">
-        <div class="columns is-centered">
-          <div class="column is-four-fifths">
-            <h2 class="title is-3">Key Insight: The Legitimate Echo Is Still There</h2>
-            <div class="content has-text-justified">
-              <p>
-                A jamming attack such as the HFR attack floods the LiDAR with rapid laser pulses.
-                The DSP pipeline picks the strongest peak in each waveform, which is usually an attack pulse, so the point lands at the wrong time of flight and the point cloud becomes random.
-                Yet the <strong>legitimate reflection still reaches the sensor</strong>, only masked by stronger attack pulses.
-                Because the corruption happens before the point cloud is formed, point-cloud-level defenses (e.g. radius or statistical outlier removal) cannot recover it.
-                The information that can is normally discarded after peak detection.
-              </p>
-            </div>
-
-            <div class="figure-block">
-              <img src="static/images/fig2_concept.png" alt="LiDAR jamming attack and simultaneous laser sensing" class="paper-figure" loading="lazy">
-              <p class="figure-caption">
-                <strong>(i)</strong> Under a jamming attack, attack pulses dominate the waveform and the detected peak gives a wrong ToF.
-                <strong>(ii)</strong> Modern LiDARs measure multiple points simultaneously. The attack pulses appear synchronized across all receivers, while legitimate pulses differ per receiver depending on the object they hit.
-              </p>
-            </div>
-
-            <div class="insight-grid">
-              <div class="insight-card">
-                <h4>Full-waveform representation</h4>
-                The time-resolved intensity trace recorded before peak detection. It still contains the weaker legitimate return buried among the attack pulses.
-              </div>
-              <div class="insight-card">
-                <h4>Simultaneous laser sensing</h4>
-                The attacker's beam diffuses wider than the LiDAR aperture, so it cannot target one receiver. Attack pulses look <em>identical</em> across simultaneously sensed receivers; legitimate returns do not.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- End key insight -->
-
-
-  <!-- Method -->
-  <section class="hero is-small is-light section-white">
-    <div class="hero-body">
-      <div class="container">
-        <div class="columns is-centered">
-          <div class="column is-four-fifths">
-            <h2 class="title is-3">PULSAR-Net</h2>
-
-            <div class="figure-block">
-              <img src="static/images/fig3_pipeline.png" alt="PULSAR-Net architecture" class="paper-figure" loading="lazy">
-              <p class="figure-caption">
-                <strong>Overview of PULSAR-Net.</strong>
-                A U-Net-inspired architecture built from depthwise-separable 3D convolutions for efficient feature extraction, with axial attention at the bottleneck to model spatial and temporal dependencies in the full waveform.
-                It outputs a 3-class mask (jamming pulse / true pulse / others) for each waveform.
-              </p>
-            </div>
-
-            <div class="content has-text-justified">
-              <h3 class="title is-5">Segmentation-Based Full-Waveform Denoising</h3>
-              <p>
-                We formulate reconstruction as segmentation rather than regression.
-                For each waveform bin, PULSAR-Net predicts one of three classes: background, legitimate reflection, or attack pulse.
-                The predicted attack mask suppresses the malicious pulses, A&#x0302; = &#x01CD; &odot; (1 &minus; M<sub>attack</sub>), and the point cloud is recovered by peak detection on each denoised waveform.
-                Masking in the original high-resolution space keeps the fine waveform detail that a regression model loses when resizing its input, and it is cheaper.
-              </p>
-
-              <h3 class="title is-5">Depthwise-Separable 3D Convolution</h3>
-              <p>
-                Full-waveform tensors (e.g. 32 &times; 1800 &times; 800) are too large for standard 3D convolutions.
-                Decoupling spatial and channel-wise operations cuts parameters and computation by <strong>over 97%</strong> while keeping representational capacity, which makes real-time deployment possible.
-              </p>
-
-              <h3 class="title is-5">Axial Spatial-Temporal Attention</h3>
-              <p>
-                Self-attention is applied sequentially along the azimuth (W), elevation (H), and temporal (D) axes.
-                This captures long-range dependencies at a fraction of the cost of full 3D attention, and lets the network compare simultaneously sensed channels directly: identical waveforms across channels signal an attack, while legitimate returns naturally differ.
-              </p>
-
-              <h3 class="title is-5">Physics-Aware Jamming Simulation</h3>
-              <p>
-                Collecting full-waveform data under real jamming at scale is impractical, and existing datasets store only final point clouds.
-                We therefore synthesize training data from KITTI and nuScenes:
-              </p>
-              <ul>
-                <li><strong>Waveform modeling.</strong> Each point becomes a Gaussian pulse at its time of flight, scaled by its intensity, giving the benign waveform tensor <em>L</em>.</li>
-                <li><strong>Simultaneous sensing.</strong> A scan-timing matrix <em>T</em> marks which measurements are fired at the same time.</li>
-                <li><strong>Jamming attack.</strong> The attacked waveform is &#x01CD; = <em>L</em> + <em>F</em>(<em>T</em>) + <em>N</em>, where <em>F</em> injects a periodic train of Gaussian attack pulses shared by all simultaneously sensed measurements, with &plusmn;20 ns timing jitter. This covers more general jamming than periodic HFR / A-HFR attacks.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- End method -->
-
-
-  <!-- Results on synthetic benchmarks -->
-  <section class="hero is-small is-light">
-    <div class="hero-body">
-      <div class="container">
-        <div class="columns is-centered">
-          <div class="column is-four-fifths">
-            <h2 class="title is-3">Results on KITTI-J and nuScenes-J</h2>
-
-            <div class="content has-text-justified">
-              <p>
-                We inject jamming into &plusmn;45&deg; in front of the victim on 1,100 scenes from each dataset (1,000 train / 100 test), with &phi; simultaneous sensing lasers.
-                We compare against <em>Naive Average Subtraction</em>, which subtracts the mean of simultaneously sensed waveforms, and <em>Neural DSP</em> (Scheuble et al., ICCV 2025), a Transformer that processes full waveforms.
-                Point-level recovery accuracy counts a reconstructed point as correct if it is within 0.5 m of the benign point along the laser direction.
-              </p>
-            </div>
-
-            <div class="fwltable-card">
-              <div class="table-container">
-                <table class="table is-bordered is-striped is-hoverable is-fullwidth fwltable__table">
-                  <caption class="fwltable__caption">
-                    <strong>Point-level recovery accuracy (%)</strong> on nuScenes-J and KITTI-J. &phi; is the number of simultaneous sensing lasers.
-                  </caption>
-                  <thead>
-                    <tr>
-                      <th rowspan="2">&phi;</th>
-                      <th colspan="2">Ours</th><th colspan="2">Naive Avg. Sub.</th><th colspan="2">Neural DSP</th><th colspan="2">No Defense</th>
-                    </tr>
-                    <tr>
-                      <th>nuScenes-J</th><th>KITTI-J</th><th>nuScenes-J</th><th>KITTI-J</th><th>nuScenes-J</th><th>KITTI-J</th><th>nuScenes-J</th><th>KITTI-J</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>1</td><td>67.95</td><td>73.21</td><td>&ndash;</td><td>&ndash;</td><td>4.57</td><td>3.92</td><td>3.37</td><td>2.92</td></tr>
-                    <tr><td>4</td><td><strong>82.66</strong></td><td><strong>89.63</strong></td><td>38.22</td><td>28.60</td><td>6.21</td><td>21.40</td><td>3.36</td><td>2.87</td></tr>
-                    <tr><td>5</td><td><strong>86.13</strong></td><td><strong>89.90</strong></td><td>38.26</td><td>30.33</td><td>9.56</td><td>26.39</td><td>3.39</td><td>2.92</td></tr>
-                    <tr><td>10</td><td><strong>85.95</strong></td><td><strong>89.86</strong></td><td>37.77</td><td>35.93</td><td>36.67</td><td>29.47</td><td>3.39</td><td>2.93</td></tr>
-                    <tr><td>25</td><td><strong>86.35</strong></td><td><strong>89.62</strong></td><td>36.91</td><td>42.28</td><td>46.35</td><td>21.03</td><td>3.42</td><td>2.90</td></tr>
-                    <tr><td>55</td><td><strong>86.47</strong></td><td><strong>89.85</strong></td><td>35.50</td><td>45.44</td><td>48.87</td><td>13.76</td><td>3.41</td><td>2.92</td></tr>
-                    <tr><td>110</td><td><strong>86.32</strong></td><td><strong>89.44</strong></td><td>32.60</td><td>35.21</td><td>47.84</td><td>13.44</td><td>3.39</td><td>2.82</td></tr>
-                    <tr><td>225</td><td><strong>86.75</strong></td><td><strong>89.56</strong></td><td>34.89</td><td>16.36</td><td>38.93</td><td>13.30</td><td>3.35</td><td>2.85</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="content has-text-justified">
-              <p>
-                Downstream, PULSAR-Net brings detector mAP from 0 back to near the no-attack level (e.g. 65.52 vs. 69.87 with PointPillars on nuScenes-J), while all baselines collapse under heavy jamming.
-                Naive subtraction leaves residual attack pulses that become false positives, and Neural DSP's coarse tokenization cannot resolve the many peaks in a jammed waveform.
-              </p>
-            </div>
-
-            <div class="fwltable-card">
-              <div class="table-container">
-                <table class="table is-bordered is-striped is-hoverable is-fullwidth fwltable__table">
-                  <caption class="fwltable__caption">
-                    <strong>Object detector-level mAP</strong> on nuScenes-J and KITTI-J for three levels of simultaneous sensing &phi;.
-                  </caption>
-                  <thead>
-                    <tr>
-                      <th rowspan="2">&phi;</th><th rowspan="2">Method</th>
-                      <th colspan="2">nuScenes-J</th><th colspan="2">KITTI-J</th>
-                    </tr>
-                    <tr>
-                      <th>PointPillars</th><th>CenterPoint</th><th>PointPillars</th><th>PV-RCNN</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td rowspan="4">25</td><td class="is-method">No Defense</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
-                    <tr><td class="is-method">Naive Avg. Sub.</td><td>1.94</td><td>0.00</td><td>21.81</td><td>41.06</td></tr>
-                    <tr><td class="is-method">Neural DSP</td><td>20.09</td><td>4.07</td><td>4.32</td><td>6.25</td></tr>
-                    <tr class="is-ours"><td class="is-method"><strong>Ours</strong></td><td><strong>64.03</strong></td><td><strong>59.08</strong></td><td><strong>48.33</strong></td><td><strong>56.06</strong></td></tr>
-                    <tr class="fwltable__divider"><td colspan="6"></td></tr>
-                    <tr><td rowspan="4">110</td><td class="is-method">No Defense</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
-                    <tr><td class="is-method">Naive Avg. Sub.</td><td>2.56</td><td>4.04</td><td>16.36</td><td>32.94</td></tr>
-                    <tr><td class="is-method">Neural DSP</td><td>37.70</td><td>26.51</td><td>0.57</td><td>1.43</td></tr>
-                    <tr class="is-ours"><td class="is-method"><strong>Ours</strong></td><td><strong>65.52</strong></td><td><strong>59.00</strong></td><td><strong>48.10</strong></td><td><strong>55.74</strong></td></tr>
-                    <tr class="fwltable__divider"><td colspan="6"></td></tr>
-                    <tr><td rowspan="4">225</td><td class="is-method">No Defense</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
-                    <tr><td class="is-method">Naive Avg. Sub.</td><td>4.09</td><td>9.11</td><td>0.14</td><td>2.34</td></tr>
-                    <tr><td class="is-method">Neural DSP</td><td>31.05</td><td>22.49</td><td>0.34</td><td>0.63</td></tr>
-                    <tr class="is-ours"><td class="is-method"><strong>Ours</strong></td><td><strong>64.15</strong></td><td><strong>59.25</strong></td><td><strong>48.95</strong></td><td><strong>56.67</strong></td></tr>
-                    <tr class="fwltable__divider"><td colspan="6"></td></tr>
-                    <tr><td>&ndash;</td><td class="is-method">No Attack</td><td>69.87</td><td>72.72</td><td>57.51</td><td>62.75</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="content has-text-justified">
-              <h3 class="title is-5">Transferability and Ablation</h3>
-              <p>
-                A model trained on nuScenes-J keeps 81.73% point-level accuracy on KITTI-J, suggesting that PULSAR-Net learns LiDAR-agnostic physical cues rather than dataset artifacts.
-                Attention along a single axis helps only marginally; attention on all three axes gives the best accuracy at a negligible speed cost.
-              </p>
-            </div>
-
-            <div class="columns">
-              <div class="column">
-                <div class="fwltable-card">
-                  <div class="table-container">
-                    <table class="table is-bordered is-striped is-hoverable is-fullwidth fwltable__table">
-                      <caption class="fwltable__caption">
-                        <strong>Transferability</strong> (point-level accuracy, &phi; = 5). Rows: source, columns: target.
-                      </caption>
-                      <thead>
-                        <tr><th>Train &rarr; Test</th><th>nuScenes-J</th><th>KITTI-J</th></tr>
-                      </thead>
-                      <tbody>
-                        <tr><td>nuScenes-J</td><td><strong>86.13</strong></td><td>81.73</td></tr>
-                        <tr><td>KITTI-J</td><td>58.81</td><td><strong>89.90</strong></td></tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-              <div class="column">
-                <div class="fwltable-card">
-                  <div class="table-container">
-                    <table class="table is-bordered is-striped is-hoverable is-fullwidth fwltable__table">
-                      <caption class="fwltable__caption">
-                        <strong>Axial attention ablation</strong> on nuScenes-J (&phi; = 5, RTX 5090).
-                      </caption>
-                      <thead>
-                        <tr><th>Attention</th><th>Point Acc.</th><th>mAP</th><th>FPS</th></tr>
-                      </thead>
-                      <tbody>
-                        <tr><td>None</td><td>67.85</td><td>25.01</td><td>32.89</td></tr>
-                        <tr><td>W only</td><td>82.98</td><td>62.05</td><td>31.94</td></tr>
-                        <tr><td>H only</td><td>80.34</td><td>62.50</td><td>32.25</td></tr>
-                        <tr><td>D only</td><td>81.93</td><td>62.55</td><td>32.36</td></tr>
-                        <tr class="is-ours"><td><strong>W + H + D</strong></td><td><strong>86.13</strong></td><td><strong>63.26</strong></td><td>31.74</td></tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- End results on synthetic benchmarks -->
-
-
   <!-- Real-world evaluation -->
   <section class="hero is-small is-light section-white" id="real-world">
     <div class="hero-body">
       <div class="container">
         <div class="columns is-centered">
           <div class="column is-four-fifths">
-            <h2 class="title is-3">Real-World Evaluation</h2>
+            <h2 class="title is-3">Demo on a Real LiDAR Under Attack</h2>
 
             <div class="content has-text-justified">
               <p>
-                We developed a production-ready LiDAR with a major LiDAR manufacturer that streams full-waveform data alongside its standard point cloud output
-                (90.24&deg; &times; 26.3&deg; FoV, 0.47&deg; angular resolution, &phi; = 96), and attacked it with the state-of-the-art HFR jamming attack.
-                The PULSAR-Net used here is trained <strong>only on synthetic nuScenes-J</strong>, with no LiDAR-specific fine-tuning.
-                We evaluate on 700 frames across static and driving scenarios, with 3,106 manually annotated vehicles at 3.4 m to 59 m.
-              </p>
-            </div>
-
-            <div class="figure-block figure-narrow" style="max-width: 560px;">
-              <img src="static/images/fig4_setup.png" alt="Experimental setup with the full-waveform LiDAR, target vehicle, and jamming device" class="paper-figure" loading="lazy">
-              <p class="figure-caption">
-                <strong>Experimental setup.</strong> Our production-ready full-waveform LiDAR, a target vehicle about 59 m away, and the jamming device.
+                A production-ready full-waveform LiDAR, developed with a major LiDAR manufacturer, attacked with the state-of-the-art HFR jamming attack.
+                PULSAR-Net is trained <strong>only on synthetic nuScenes-J</strong>, with no fine-tuning for this LiDAR.
               </p>
             </div>
 
@@ -621,6 +343,13 @@
                 &nbsp;|&nbsp; <strong>Right:</strong> <span class="is-denoised">PULSAR-Net Reconstruction</span>
               </p>
               <p class="comp-hint"><i class="fas fa-hand-pointer"></i> Hover or drag to move the slider yourself.</p>
+            </div>
+
+            <div class="figure-block figure-narrow" style="max-width: 560px;">
+              <img src="static/images/fig4_setup.png" alt="Experimental setup with the full-waveform LiDAR, target vehicle, and jamming device" class="paper-figure" loading="lazy">
+              <p class="figure-caption">
+                <strong>Experimental setup.</strong> Our production-ready full-waveform LiDAR, a target vehicle about 59 m away, and the jamming device.
+              </p>
             </div>
 
             <div class="fwltable-card">
@@ -659,6 +388,145 @@
     </div>
   </section>
   <!-- End real-world evaluation -->
+
+
+  <!-- Contributions -->
+  <section class="hero is-small is-light">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Contributions</h2>
+            <div class="content">
+              <ul class="contribution-list">
+                <li><strong>PULSAR-Net</strong> (<strong>P</strong>oint cloud <strong>U</strong>n-jamming via <strong>L</strong>iDAR <strong>S</strong>ignal <strong>A</strong>daptive <strong>R</strong>econstruction), the first successful defense against jamming attacks on LiDAR systems: a U-Net-based architecture with axial spatial attention designed for attack-signal segmentation in the full-waveform representation.</li>
+                <li>A <strong>physics-based synthesis pipeline</strong> that generates realistic full-waveform data under jamming attacks from existing point cloud datasets (KITTI-J and nuScenes-J).</li>
+                <li>A recovery rate of <strong>&ge;82%</strong> of points obscured by jamming on our synthetic benchmarks, an <strong>&ge;2-fold</strong> improvement over a naive baseline.</li>
+                <li>Integration into a <strong>production-ready LiDAR</strong> with full-waveform access, developed with a major supplier. Trained solely on simulated data, PULSAR-Net reconstructs <strong>92%</strong> and <strong>73%</strong> of erased vehicles in real-world static and driving scenarios.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End contributions -->
+
+
+  <!-- Key insight -->
+  <section class="hero is-small is-light section-white">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Key Insight: The Legitimate Echo Is Still There</h2>
+            <div class="content has-text-justified">
+              <p>
+                A LiDAR records a waveform (received intensity over time) for every laser shot and keeps only its strongest peak as the point.
+                Jamming hides the real echo behind stronger attack pulses, but does not remove it from the waveform.
+              </p>
+            </div>
+
+            <div class="wf-legend">
+              <span><i class="wf-swatch" style="background:#2563eb"></i>Legitimate echo from the object</span>
+              <span><i class="wf-swatch" style="background:#dc2626"></i>Attack pulse</span>
+            </div>
+            <div class="wf-grid">
+              <figure class="wf-panel">
+                <figcaption class="wf-title"><span class="wf-num">1</span>No attack</figcaption>
+                <svg viewBox="0 0 400 200" class="wf-svg" role="img" aria-label="Without attack the only peak is the object echo"><defs><marker id="ax-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#374151"/></marker></defs><line x1="20" y1="160" x2="385" y2="160" stroke="#374151" stroke-width="1.5" marker-end="url(#ax-arrow)"/><text x="385" y="178" text-anchor="end" class="wf-axis">time = distance</text><path d="M230 160 L233 90 C236 142.5 240 160 250 160" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" /><path d="M226 68 L240 68 L233 80 Z" fill="#2563eb"/><text x="233" y="62" text-anchor="middle" class="wf-note" fill="#2563eb">detected peak = correct distance</text></svg>
+                <p class="wf-caption">The only peak is the echo, so the measured distance is correct.</p>
+              </figure>
+              <figure class="wf-panel">
+                <figcaption class="wf-title"><span class="wf-num">2</span>Under attack</figcaption>
+                <svg viewBox="0 0 400 200" class="wf-svg" role="img" aria-label="Under attack stronger attack pulses hide the echo, which is still present"><defs><marker id="ax-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#374151"/></marker></defs><line x1="20" y1="160" x2="385" y2="160" stroke="#374151" stroke-width="1.5" marker-end="url(#ax-arrow)"/><path d="M80 160 L83 35 C86 128.8 90 160 100 160" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M175 160 L178 35 C181 128.8 185 160 195 160" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M300 160 L303 35 C306 128.8 310 160 320 160" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M230 160 L233 90 C236 142.5 240 160 250 160" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" /><ellipse cx="238" cy="125" rx="24" ry="48" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4 3"/><text x="238" y="182" text-anchor="middle" class="wf-note" fill="#2563eb">echo still here</text><path d="M171 18 L185 18 L178 30 Z" fill="#dc2626"/><text x="178" y="12" text-anchor="middle" class="wf-note" fill="#dc2626">detected peak = wrong distance</text></svg>
+                <p class="wf-caption">Stronger attack pulses win peak detection and the point lands at a random distance. The echo is still in the waveform.</p>
+              </figure>
+              <figure class="wf-panel">
+                <figcaption class="wf-title"><span class="wf-num">3</span>Compare receivers fired at the same time</figcaption>
+                <svg viewBox="0 -8 400 208" class="wf-svg" role="img" aria-label="Attack pulses line up across receivers; echoes differ"><defs><marker id="ax-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#374151"/></marker></defs><text x="200" y="4" text-anchor="middle" class="wf-note" fill="#dc2626">same timing in every receiver</text><rect x="72" y="16" width="36" height="174" rx="6" fill="#dc2626" fill-opacity="0.12"/><rect x="167" y="16" width="36" height="174" rx="6" fill="#dc2626" fill-opacity="0.12"/><rect x="292" y="16" width="36" height="174" rx="6" fill="#dc2626" fill-opacity="0.12"/><text x="20" y="41" class="wf-axis">Rx 1</text><line x1="55" y1="45" x2="385" y2="45" stroke="#374151" stroke-width="1.5" marker-end="url(#ax-arrow)"/><path d="M80 45 L83 19 C86 38.5 90 45 100 45" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M175 45 L178 19 C181 38.5 185 45 195 45" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M300 45 L303 19 C306 38.5 310 45 320 45" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M230 45 L233 27 C236 40.5 240 45 250 45" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" /><text x="20" y="86" class="wf-axis">Rx 2</text><line x1="55" y1="90" x2="385" y2="90" stroke="#374151" stroke-width="1.5" marker-end="url(#ax-arrow)"/><path d="M80 90 L83 64 C86 83.5 90 90 100 90" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M175 90 L178 64 C181 83.5 185 90 195 90" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M300 90 L303 64 C306 83.5 310 90 320 90" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M120 90 L123 72 C126 85.5 130 90 140 90" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" /><text x="20" y="131" class="wf-axis">Rx 3</text><line x1="55" y1="135" x2="385" y2="135" stroke="#374151" stroke-width="1.5" marker-end="url(#ax-arrow)"/><path d="M80 135 L83 109 C86 128.5 90 135 100 135" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M175 135 L178 109 C181 128.5 185 135 195 135" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M300 135 L303 109 C306 128.5 310 135 320 135" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M255 135 L258 117 C261 130.5 265 135 275 135" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" /><text x="20" y="176" class="wf-axis">Rx 4</text><line x1="55" y1="180" x2="385" y2="180" stroke="#374151" stroke-width="1.5" marker-end="url(#ax-arrow)"/><path d="M80 180 L83 154 C86 173.5 90 180 100 180" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M175 180 L178 154 C181 173.5 185 180 195 180" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M300 180 L303 154 C306 173.5 310 180 320 180" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" /><path d="M145 180 L148 162 C151 175.5 155 180 165 180" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" /></svg>
+                <p class="wf-caption">The jammer&rsquo;s wide beam hits all receivers at once, so attack pulses line up. Echoes depend on each object and do not.</p>
+              </figure>
+              <figure class="wf-panel">
+                <figcaption class="wf-title"><span class="wf-num">4</span>PULSAR-Net removes the aligned pulses</figcaption>
+                <svg viewBox="0 0 400 200" class="wf-svg" role="img" aria-label="After removing synchronized pulses the echo is the detected peak"><defs><marker id="ax-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#374151"/></marker></defs><line x1="20" y1="160" x2="385" y2="160" stroke="#374151" stroke-width="1.5" marker-end="url(#ax-arrow)"/><text x="385" y="178" text-anchor="end" class="wf-axis">time = distance</text><path d="M80 160 L83 35 C86 128.8 90 160 100 160" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" stroke-opacity="0.35" stroke-dasharray="4 4"/><path d="M175 160 L178 35 C181 128.8 185 160 195 160" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" stroke-opacity="0.35" stroke-dasharray="4 4"/><path d="M300 160 L303 35 C306 128.8 310 160 320 160" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round" stroke-opacity="0.35" stroke-dasharray="4 4"/><path d="M230 160 L233 90 C236 142.5 240 160 250 160" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" /><path d="M226 68 L240 68 L233 80 Z" fill="#2563eb"/><text x="233" y="62" text-anchor="middle" class="wf-note" fill="#2563eb">correct distance recovered</text></svg>
+                <p class="wf-caption">Peak detection on the cleaned waveform finds the echo again, restoring the correct point.</p>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End key insight -->
+
+
+  <!-- Method -->
+  <section class="hero is-small is-light">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">PULSAR-Net</h2>
+
+            <div class="figure-block">
+              <img src="static/images/fig3_pipeline.png" alt="PULSAR-Net architecture" class="paper-figure" loading="lazy">
+              <p class="figure-caption">
+                A U-Net with depthwise-separable 3D convolutions and axial attention labels every waveform sample as attack pulse, legitimate echo, or background.
+                Removing the attack pulses and running peak detection again gives the reconstructed point cloud.
+                Training data is synthesized from KITTI and nuScenes with a physics-aware jamming simulation.
+                See the paper for details.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End method -->
+
+
+  <!-- Results on synthetic benchmarks -->
+  <section class="hero is-small is-light section-white">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Results on KITTI-J and nuScenes-J</h2>
+
+            <div class="fwltable-card">
+              <div class="table-container">
+                <table class="table is-bordered is-striped is-hoverable is-fullwidth fwltable__table">
+                  <caption class="fwltable__caption">
+                    Synthetic jamming benchmarks with &phi; = 110 simultaneous sensing lasers.
+                    Point-level accuracy counts a point as recovered if it lies within 0.5 m of the clean point. Other &phi; values and ablations are in the paper.
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th rowspan="2">Method</th>
+                      <th colspan="2">Point-level accuracy (%)</th><th colspan="2">Detection mAP</th>
+                    </tr>
+                    <tr>
+                      <th>nuScenes-J</th><th>KITTI-J</th><th>nuScenes-J<br><small>PointPillars</small></th><th>KITTI-J<br><small>PV-RCNN</small></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>No Defense</td><td>3.39</td><td>2.82</td><td>0.00</td><td>0.00</td></tr>
+                    <tr><td>Naive Avg. Sub.</td><td>32.60</td><td>35.21</td><td>2.56</td><td>32.94</td></tr>
+                    <tr><td>Neural DSP (ICCV 2025)</td><td>47.84</td><td>13.44</td><td>37.70</td><td>1.43</td></tr>
+                    <tr class="is-ours"><td><strong>Ours</strong></td><td><strong>86.32</strong></td><td><strong>89.44</strong></td><td><strong>65.52</strong></td><td><strong>55.74</strong></td></tr>
+                    <tr class="fwltable__divider"><td colspan="5"></td></tr>
+                    <tr><td>No Attack (reference)</td><td>&ndash;</td><td>&ndash;</td><td>69.87</td><td>62.75</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End results on synthetic benchmarks -->
 
 
   <!-- Acknowledgements -->
